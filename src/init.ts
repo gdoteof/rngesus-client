@@ -16,7 +16,7 @@ import {
   logError,
 } from "./utils";
 
-const alice = async () => {
+const init = async () => {
   const rngesusProgramId = getProgramId();
 
   const ourKeypair = getKeypair("id");
@@ -94,7 +94,7 @@ const alice = async () => {
   } else if (
     !new PublicKey(
       decodedEscrowState.initializerReceivingTokenAccountPubkey
-    ).equals(aliceYTokenAccountPubkey)
+    ).equals(initYTokenAccountPubkey)
   ) {
     logError(
       "initializerReceivingTokenAccountPubkey has not been set correctly / not been set to Alice's Y public key"
@@ -111,17 +111,17 @@ const alice = async () => {
     process.exit(1);
   }
   console.log(
-    `✨Escrow successfully initialized. Alice is offering ${terms.bobExpectedAmount}X for ${terms.aliceExpectedAmount}Y✨\n`
+    `✨Escrow successfully initialized. Alice is offering ${terms.bobExpectedAmount}X for ${terms.initExpectedAmount}Y✨\n`
   );
   writePublicKey(escrowKeypair.publicKey, "escrow");
   console.table([
     {
       "Alice Token Account X": await getTokenBalance(
-        aliceXTokenAccountPubkey,
+        initXTokenAccountPubkey,
         connection
       ),
       "Alice Token Account Y": await getTokenBalance(
-        aliceYTokenAccountPubkey,
+        initYTokenAccountPubkey,
         connection
       ),
       "Bob Token Account X": await getTokenBalance(
@@ -143,4 +143,4 @@ const alice = async () => {
   */
 };
 
-alice();
+init();
