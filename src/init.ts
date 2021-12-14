@@ -1,5 +1,7 @@
 import {
   Connection,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -13,17 +15,16 @@ import {
   getKeypair,
   getProgramId,
   getPublicKey,
-  logError,
 } from "./utils";
 
-const init = async () => {
+const alice = async () => {
   const rngesusProgramId = getProgramId();
 
   const ourKeypair = getKeypair("id");
+  const dataKeypair = getKeypair("rngesus_data");
 
   const connection = new Connection("https://api.devnet.solana.com", "confirmed");
 
-  const executableAccountPubkey = getPublicKey("derived_bpf");
 
 
   const rngesusInitIx = new TransactionInstruction({
@@ -31,13 +32,11 @@ const init = async () => {
     keys: [
       { pubkey: ourKeypair.publicKey, isSigner: true, isWritable: false },
       {
-        pubkey: rngesusProgramId,
-        isSigner: false,
+        pubkey: dataKeypair.publicKey,
+        isSigner: true,
         isWritable: true,
       },
-      { 
-        pubkey: executableAccountPubkey, isSigner: false, isWritable: false
-      }   
+      { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
     ],
     data: Buffer.from(
       Uint8Array.of(0, ...new BN(
@@ -48,13 +47,27 @@ const init = async () => {
     )
   });
 
+  let min_bal = await connection.getMinimumBalanceForRentExemption(3241);
+
+  console.log("minimum balance is: ", min_bal);
+
+
+  const createEscrowAccountIx = SystemProgram.createAccount({
+    space: 3241,
+    lamports: min_bal,
+    fromPubkey: ourKeypair.publicKey,
+    newAccountPubkey: dataKeypair.publicKey,
+    programId: rngesusProgramId,
+  });
+
   const tx = new Transaction().add(
+    createEscrowAccountIx,
     rngesusInitIx
   );
   console.log("Sending init transaction...");
   await connection.sendTransaction(
     tx,
-    [ourKeypair],
+    [ourKeypair, dataKeypair],
     { skipPreflight: false, preflightCommitment: "confirmed" }
   );
 
@@ -94,7 +107,7 @@ const init = async () => {
   } else if (
     !new PublicKey(
       decodedEscrowState.initializerReceivingTokenAccountPubkey
-    ).equals(initYTokenAccountPubkey)
+    ).equals(aliceYTokenAccountPubkey)
   ) {
     logError(
       "initializerReceivingTokenAccountPubkey has not been set correctly / not been set to Alice's Y public key"
@@ -111,17 +124,17 @@ const init = async () => {
     process.exit(1);
   }
   console.log(
-    `✨Escrow successfully initialized. Alice is offering ${terms.bobExpectedAmount}X for ${terms.initExpectedAmount}Y✨\n`
+    `✨Escrow successfully initialized. Alice is offering ${terms.bobExpectedAmount}X for ${terms.aliceExpectedAmount}Y✨\n`
   );
   writePublicKey(escrowKeypair.publicKey, "escrow");
   console.table([
     {
       "Alice Token Account X": await getTokenBalance(
-        initXTokenAccountPubkey,
+        aliceXTokenAccountPubkey,
         connection
       ),
       "Alice Token Account Y": await getTokenBalance(
-        initYTokenAccountPubkey,
+        aliceYTokenAccountPubkey,
         connection
       ),
       "Bob Token Account X": await getTokenBalance(
@@ -143,4 +156,4 @@ const init = async () => {
   */
 };
 
-init();
+alice();
