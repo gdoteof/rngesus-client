@@ -15,6 +15,18 @@ export const writePublicKey = (publicKey: PublicKey, name: string) => {
   );
 };
 
+export const writePrivateKey = (keypair: Keypair, name: string) => {
+fs.writeFileSync(
+    `./keys/${name}.json`,
+    `[${keypair.secretKey.join(",")}]`
+  );
+};
+
+export const writeKey = (keypair: Keypair, name: string) => {
+  writePublicKey(keypair.publicKey,name);
+  writePrivateKey(keypair,name);
+};
+
 export const getPublicKey = (name: string) =>
   new PublicKey(
     JSON.parse(fs.readFileSync(`./keys/${name}_pub.json`) as unknown as string)

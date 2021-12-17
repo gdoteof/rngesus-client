@@ -1,8 +1,5 @@
 import {
   Connection,
-  PublicKey,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
@@ -16,20 +13,54 @@ import {
   getKeypair,
   getProgramId,
   getPublicKey,
-  logError,
-  RngesusLayout,
-  RNGESUS_ACCOUNT_DATA_LAYOUT,
 } from "./utils";
 
-const get = async () => {
+const increment_ptr = async () => {
   const rngesusProgramId = getProgramId();
 
+  const ourKeypair = getKeypair("id");
+  const dataKeypair = getKeypair('rng_data');
 
   const connection = new Connection("https://api.devnet.solana.com", "confirmed");
 
-  const dataKeypair = getKeypair("rng_data");
+  const nextHashByteArray = bs58.decode("AvumXmJo9qjiVGYQLA3ejsBSfqE4HPP4Gb65Fe1sAxwk");
+  const secretByteArray = bs58.decode("AzTTsycuPsXaPgEG6tfXqVnLCrSJrrSvP6H79irjT4DU");
+
+  const rngesusIncrementPtrIx = new TransactionInstruction({
+    programId: rngesusProgramId,
+    keys: [
+      { pubkey: ourKeypair.publicKey, isSigner: true, isWritable: false },
+      { 
+        pubkey: dataKeypair.publicKey, isSigner: false, isWritable: true
+      }   
+    ],
+    data: Buffer.from(
+      Uint8Array.of(
+        1,  //Rngesus.IncrementPass
+        ...new BN( nextHashByteArray).toArray("be", 32),
+        ...new BN( secretByteArray).toArray("be", 32)
+      )
+    )
+  });
+
+  const tx = new Transaction().add(
+    rngesusIncrementPtrIx
+  );
+  console.log("Sending increment_ptr transaction...");
+  const txId = await connection.sendTransaction(
+    tx,
+    [ourKeypair],
+    { skipPreflight: false, preflightCommitment: "confirmed" }
+  );
+
+  console.log("txid: ", txId);
+
+  /*
+  // sleep to allow time to update
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
   const rngEsusAccount = await connection.getAccountInfo(
-    dataKeypair.publicKey
+    rngesusProgramId
   );
 
   console.log(rngEsusAccount)
@@ -39,23 +70,11 @@ const get = async () => {
     process.exit(1);
   }
 
-  const encodedRngesusState = rngEsusAccount?.data;
-  console.log("BUYTE LENGTH??:" + encodedRngesusState?.byteLength);
-
-  const decodedRngesusState = RNGESUS_ACCOUNT_DATA_LAYOUT.decode(
-    encodedRngesusState
-  ) as RngesusLayout;
-
-  console.log(decodedRngesusState);
-
-  const ptr = new BN(decodedRngesusState.ptr, 4, "le");
-  const num_callbacks = new BN(decodedRngesusState.numCallbacks, 4, "le");
-  const pubkey_last = new PublicKey( decodedRngesusState.prevHash );
-
-  console.log("Ptr: %d, num_callbacks: %d", ptr, num_callbacks);
-  console.log("prevHash: " + pubkey_last.toBase58());
-
   /*
+  const encodedEscrowState = escrowAccount.data;
+  const decodedEscrowState = ESCROW_ACCOUNT_DATA_LAYOUT.decode(
+    encodedEscrowState
+  ) as EscrowLayout;
 
   if (!decodedEscrowState.isInitialized) {
     logError("Escrow state initialization flag has not been set");
@@ -72,7 +91,7 @@ const get = async () => {
   } else if (
     !new PublicKey(
       decodedEscrowState.initializerReceivingTokenAccountPubkey
-    ).equals(getYTokenAccountPubkey)
+    ).equals(aliceYTokenAccountPubkey)
   ) {
     logError(
       "initializerReceivingTokenAccountPubkey has not been set correctly / not been set to Alice's Y public key"
@@ -89,17 +108,17 @@ const get = async () => {
     process.exit(1);
   }
   console.log(
-    `✨Escrow successfully initialized. Alice is offering ${terms.bobExpectedAmount}X for ${terms.getExpectedAmount}Y✨\n`
+    `✨Escrow successfully initialized. Alice is offering ${terms.bobExpectedAmount}X for ${terms.aliceExpectedAmount}Y✨\n`
   );
   writePublicKey(escrowKeypair.publicKey, "escrow");
   console.table([
     {
       "Alice Token Account X": await getTokenBalance(
-        getXTokenAccountPubkey,
+        aliceXTokenAccountPubkey,
         connection
       ),
       "Alice Token Account Y": await getTokenBalance(
-        getYTokenAccountPubkey,
+        aliceYTokenAccountPubkey,
         connection
       ),
       "Bob Token Account X": await getTokenBalance(
@@ -121,4 +140,4 @@ const get = async () => {
   */
 };
 
-get();
+increment_ptr();

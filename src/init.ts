@@ -20,6 +20,8 @@ import {
   logError,
   RngesusLayout,
   RNGESUS_ACCOUNT_DATA_LAYOUT,
+  writeKey,
+  writePrivateKey,
   writePublicKey,
 } from "./utils";
 
@@ -31,6 +33,7 @@ const initData = async () => {
   const connection = new Connection("https://api.devnet.solana.com", "confirmed");
 
   const dataKeypair = new Keypair();
+
 
   const initKeyByteArray = bs58.decode("BnwWPXB1B7Awc2yBbpu8kKJzTwfkVQZEWN8Gsc3yzkQ7");
 
@@ -116,8 +119,8 @@ const initData = async () => {
     && decodedRngesusState.ptr == 1
     && decodedRngesusState.numCallbacks == 0){
     console.log("Success!");
-    console.log("Data public id:%s", bs58.encode(dataKeypair.publicKey));
-    writePublicKey(dataKeypair.publicKey, "rng_data");
+    console.log("Data public id: ", dataKeypair.publicKey.toString());
+    writeKey(dataKeypair, "rng_data");
   } else {
     console.log(decodedRngesusState);
     //console.log("prevHash: ", decodedRngesusState.prevHash, " encoded: ", bs58.encode(initKeyByteArray));
