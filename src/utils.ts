@@ -70,18 +70,18 @@ const uint64 = (property = "uint64") => {
   return BufferLayout.blob(8, property);
 };
 
-export const ESCROW_ACCOUNT_DATA_LAYOUT = BufferLayout.struct([
+export const RNGESUS_ACCOUNT_DATA_LAYOUT = BufferLayout.struct([
   BufferLayout.u8("isInitialized"),
-  publicKey("initializerPubkey"),
-  publicKey("initializerTempTokenAccountPubkey"),
-  publicKey("initializerReceivingTokenAccountPubkey"),
-  uint64("expectedAmount"),
+  BufferLayout.blob(32, "prevHash"),
+  BufferLayout.u32("ptr"),
+  BufferLayout.u32("numCallbacks"),
+  BufferLayout.blob(3241-1-32-4-4, "callbackPubkeys"), 
 ]);
 
-export interface EscrowLayout {
+export interface RngesusLayout {
   isInitialized: number;
-  initializerPubkey: Uint8Array;
-  initializerReceivingTokenAccountPubkey: Uint8Array;
-  initializerTempTokenAccountPubkey: Uint8Array;
-  expectedAmount: Uint8Array;
+  prevHash: Uint8Array;
+  ptr: number;
+  numCallbacks: number;
+  callbackPubkeys: Uint8Array;
 }
