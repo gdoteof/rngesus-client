@@ -7,7 +7,8 @@
     "compile": "tsc -p ./tsconfig.json",
     "setup-validator": "solana-test-validator -r --mint E2F3fsS1HpsLb2VpEgsA5ztfo83CWFWW4jWpC6FvJ6qR --bpf-program 4yBTZXsuz7c1X3PJF4PPCJr8G6HnNAgRvzAWVoFZMncH",
     "init": "npm run compile && node build/init.js",
-    "increment_ptr": "npm run compile && node build/increment_ptr.js"
+    "get": "npm run compile && node build/get.js",
+    "increment_pass": "npm run compile && node build/increment_pass.js"
   },
   "author": "",
   "license": "ISC",

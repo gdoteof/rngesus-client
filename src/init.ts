@@ -16,13 +16,10 @@ import {
 
   getKeypair,
   getProgramId,
-  getPublicKey,
   logError,
   RngesusLayout,
   RNGESUS_ACCOUNT_DATA_LAYOUT,
   writeKey,
-  writePrivateKey,
-  writePublicKey,
 } from "./utils";
 
 const initData = async () => {
@@ -108,8 +105,6 @@ const initData = async () => {
     encodedRngesusState
   ) as RngesusLayout;
 
-  const ptr = new BN(decodedRngesusState.ptr, 4, "le");
-  const num_callbacks = new BN(decodedRngesusState.numCallbacks, 4, "le");
   const pubkey_last = new PublicKey( decodedRngesusState.prevHash );
   const pubkey_init = new PublicKey( initKeyByteArray );
   console.log("Pubkey_last:" + pubkey_last);

@@ -4,6 +4,8 @@ import * as BufferLayout from "buffer-layout";
 
 import * as fs from "fs";
 
+export type SecretKey = PublicKey;
+
 export const logError = (msg: string) => {
   console.log(`\x1b[31m${msg}\x1b[0m`);
 };
@@ -68,19 +70,6 @@ export const getTokenBalance = async (
   );
 };
 
-/**
- * Layout for a public key
- */
-const publicKey = (property = "publicKey") => {
-  return BufferLayout.blob(32, property);
-};
-
-/**
- * Layout for a 64bit unsigned value
- */
-const uint64 = (property = "uint64") => {
-  return BufferLayout.blob(8, property);
-};
 
 export const RNGESUS_ACCOUNT_DATA_LAYOUT = BufferLayout.struct([
   BufferLayout.u8("isInitialized"),
@@ -92,7 +81,7 @@ export const RNGESUS_ACCOUNT_DATA_LAYOUT = BufferLayout.struct([
 
 export interface RngesusLayout {
   isInitialized: number;
-  prevHash: Uint8Array;
+  prevHash: SecretKey;
   ptr: number;
   numCallbacks: number;
   callbackPubkeys: Uint8Array;

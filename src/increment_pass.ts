@@ -12,7 +12,6 @@ import {
 
   getKeypair,
   getProgramId,
-  getPublicKey,
 } from "./utils";
 
 const increment_ptr = async () => {
