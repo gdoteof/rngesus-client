@@ -5,3 +5,5 @@ test-ledger
 
 keys/id.json
 keys/rng_data*
+
+data/*.bin

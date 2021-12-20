@@ -9,13 +9,13 @@ import {
 } from "@solana/web3.js";
 
 
-const bs58 = require('bs58')
 import BN = require("bn.js");
 
 import {
 
   getKeypair,
   getProgramId,
+  get_pair_by_epoch,
   logError,
   RngesusLayout,
   RNGESUS_ACCOUNT_DATA_LAYOUT,
@@ -27,12 +27,17 @@ const initData = async () => {
 
   const ourKeypair = getKeypair("id");
 
+
+
+
+  const nextPair = await get_pair_by_epoch(0);
+  const nextHashByteArray = nextPair.newHash.toBytes();
   const connection = new Connection("https://api.devnet.solana.com", "confirmed");
 
   const dataKeypair = new Keypair();
 
 
-  const initKeyByteArray = bs58.decode("BnwWPXB1B7Awc2yBbpu8kKJzTwfkVQZEWN8Gsc3yzkQ7");
+  const initKeyByteArray = nextHashByteArray;
 
 
 
@@ -49,7 +54,7 @@ const initData = async () => {
     ],
     data: Buffer.from(
       Uint8Array.of(0, ...new BN(
-          initKeyByteArray
+         nextHashByteArray 
       ).toArray("be", 32))
     )
   });

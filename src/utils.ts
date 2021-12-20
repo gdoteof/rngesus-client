@@ -3,6 +3,7 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as BufferLayout from "buffer-layout";
 
 import * as fs from "fs";
+import { get_external_data } from "./on_chain_reads";
 
 export type SecretKey = PublicKey;
 
@@ -85,4 +86,68 @@ export interface RngesusLayout {
   ptr: number;
   numCallbacks: number;
   callbackPubkeys: Uint8Array;
+}
+
+export interface RngEpochPair {
+  newHash: PublicKey,
+  secret: SecretKey
+}
+
+/**
+ * Returns the next hash/secret to send to the onchain program.
+ * 
+ * If `epoch` is supplied, instead of looking on-chain, we will use `epoch`
+ * instead of what is stored on-chain.
+ *
+ * @param [epochs=0]
+ * @param [mode=0o666]
+ */
+
+export const get_pair_by_epoch = async (epoch:number) : Promise<RngEpochPair> => {
+  const  buffer = Buffer.alloc(64); //32 each for secret, prev_hash
+  const file = fs.openSync('data/piapprec.bin', 'r');
+  const start = (epoch) * 64;
+  const end = start + 64;
+  
+  await readBytes(file, buffer, start, end);
+  const firstHalf = buffer.slice(0,32);
+  const secondHalf = buffer.slice(32);
+
+  return {
+    newHash : new PublicKey(firstHalf),
+    secret : new PublicKey(secondHalf),
+  }
+}
+
+export const getCurrentPair = async () => {
+  const  buffer = Buffer.alloc(64); //32 each for secret, prev_hash
+  const file = fs.openSync('data/piapprec.bin', 'r');
+  const on_chain_data = await get_external_data();
+  const start = (on_chain_data.ptr) * 32;
+  const end = start + 64;
+  
+  await readBytes(file, buffer, start, end);
+  const firstHalf = buffer.slice(0,32);
+  const secondHalf = buffer.slice(32);
+
+  return {
+    newHash : new PublicKey(firstHalf),
+    secret : new PublicKey(secondHalf),
+  }
+}
+
+const readBytes = async (fd: number, buffer: Buffer, start: number, end: number) => {
+  return new Promise<void>((resolve, reject) => {
+      fs.read(
+          fd, 
+          buffer,
+          0,
+          end-start,
+          start,
+          (err) => {
+              if(err) { return reject(err); }
+              resolve();
+          }
+      );
+  });
 }
